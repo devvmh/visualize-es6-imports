@@ -52,12 +52,25 @@ function getDeps(files) {
   return deps
 }
 
+// TODO remove this function?
+function removePatchedAndComponents(deps) {
+  return Object.keys(deps).reduce((newDeps, currentKey) => {
+    const original = deps[currentKey]
+    const { internal, external } = original
+    newDeps[currentKey] = {
+      external,
+      internal: internal.filter(dep => !dep.startsWith('component') && !dep.startsWith('patched'))
+    }
+    return newDeps
+  }, {})
+}
+
 function verifyAllInternalDependenciesExist(deps) {
   const allkeys = Object.keys(deps)
   Object.keys(deps).forEach(filename => {
     const file = deps[filename]
     file.internal.forEach(dependency => {
-      if (allkeys.indexOf(dependency) === -1 && !dependency.startsWith('components') && !dependency.startsWith('patched')) {
+      if (allkeys.indexOf(dependency) === -1) {
         console.log(`dependency doesn't exist! ${dependency}`)
         throw new Error(`dependency doesn't exist! ${dependency}`)
       }
@@ -76,7 +89,11 @@ getFiles()
   //console.log(deps)
   return deps
 })
+.then(removePatchedAndComponents) // TODO remove this function
 .then(verifyAllInternalDependenciesExist)
 .then(deps => {
   console.log(deps)
+})
+.catch(error => {
+  console.error(error.stack)
 })
