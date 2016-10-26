@@ -79,21 +79,56 @@ function verifyAllInternalDependenciesExist(deps) {
   return deps
 }
 
+function getExternals(deps) {
+  // hash table for uniqueness
+  const depsObject = {}
+  Object.keys(deps).forEach(key => {
+    deps[key].external.forEach(external => {
+      if (external == '') return
+      depsObject[external] = true
+    })
+  })
+  return Object.keys(depsObject)
+}
+
+function buildCSV(deps) {
+  const csv = []
+
+  csv.push(['Topics'])
+  csv.push(['Name', 'Metacode'])
+
+  Object.keys(deps).forEach(name => csv.push([name, 'Resource']))
+  getExternals(deps).forEach(name => csv.push([name, 'Reference']))
+
+  csv.push([])
+  csv.push(['Synapses'])
+  csv.push(['Topic1', 'Topic2'])
+
+  Object.keys(deps).forEach(name => {
+    const { internal, external } = deps[name]
+    internal.forEach(dep => csv.push([name, dep]))
+    external.forEach(dep => csv.push([name, dep]))
+  })
+
+  return csv
+}
+
 /*
  * MAIN
  */
 
 getFiles()
 .then(getDeps)
-.then(deps => {
-  //console.log(deps)
-  return deps
-})
-.then(removePatchedAndComponents) // TODO remove this function
+.then(removePatchedAndComponents) // TODO remove this
 .then(verifyAllInternalDependenciesExist)
-.then(deps => {
-  console.log(deps)
-})
-.catch(error => {
+.then(buildCSV)
+.then(csvArray => {
+  const csvString = csvArray.map(row => {
+    return '"' + row.map(col => {
+      return col.replace('"', '""')
+    }).join('","') + '"'
+  }).join("\r\n")
+  console.log(csvString)
+}).catch(error => {
   console.error(error.stack)
 })
