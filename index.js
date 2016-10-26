@@ -17,8 +17,16 @@ function getFiles() {
 }
 
 function standardizeName(oldName, importer) {
-  const step1 = oldName.replace(/^Metamaps\//, '').replace(/\.js$/, '')
-  return step1
+  let directory = dirname(importer.replace(/^Metamaps\//, ''))
+  let file = oldName.replace(/\.js$/, '').replace(/^\.\//, '')
+  while (file.startsWith('../')) {
+    directory = dirname(directory)
+    file = file.replace(/^\.\.\//, '')
+  }
+
+  if (directory === '.') return `${file}.js`
+
+  return `${directory}/${file}.js`
 }
 
 /*
@@ -26,13 +34,10 @@ function standardizeName(oldName, importer) {
  */
 function getFileDeps(file) {
   const src = fs.readFileSync(file, 'utf8')
-  const deps = detect(src, { requires: false }).map(dep => standardizeName(dep, file))
-  console.log(deps)
-  return {
-    sameFolder: deps.filter(dep => dep.startsWith('./')),
-    otherFolder: deps.filter(dep => dep.startsWith('../')),
-    external: deps.filter(dep => !dep.startsWith('.'))
-  }
+  const deps = detect(src, { requires: false })
+  const external = deps.filter(dep => !dep.startsWith('.'))
+  const internal = deps.filter(dep => dep.startsWith('.')).map(dep => standardizeName(dep, file))
+  return { external, internal }
 }
 
 function getDeps(files) {
