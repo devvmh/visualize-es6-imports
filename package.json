@@ -1,5 +1,5 @@
 {
-  "name": "deps-to-metamaps",
+  "name": "metamaps-visualize-es6-imports",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -11,6 +11,7 @@
   "dependencies": {
     "babel-cli": "^6.18.0",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.18.0",
-    "detect-import-require": "^2.0.0"
+    "detect-import-require": "^2.0.0",
+    "dirname": "^0.1.0"
   }
 }
